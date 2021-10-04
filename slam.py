@@ -52,6 +52,9 @@ from utils_sys import Printer, getchar, Logging
 from utils_draw import draw_feature_matches
 from utils_geom import triangulate_points, poseRt, normalize_vector, inv_T, triangulate_normalized_points, estimate_pose_ess_mat
 
+from scipy.spatial.transform import Rotation as R
+from camera_pose import CameraPose
+
 
 kVerbose = True     
 kTimerVerbose = False 
@@ -207,7 +210,21 @@ class Tracking(object):
         
         if kLogKFinfoToFile:
             self.kf_info_logger = Logging.setup_file_logger('kf_info_logger', 'kf_info.log',formatter=Logging.simple_log_formatter)
-                 
+
+    def get_trajectory(self):
+        trajectory = np.zeros((0, 3))
+        prev_pose = np.zeros((1,3))
+        n_his = len(self.tracking_history.relative_frame_poses)
+        for i in range(n_his):
+            if self.tracking_history.slam_states[i] == SlamState.OK:  # OK
+                cur_camera = CameraPose(self.tracking_history.relative_frame_poses[i])
+                cur_pose = np.expand_dims(cur_camera.Ow, 0) + prev_pose
+                trajectory = np.concatenate((trajectory, cur_pose), axis=0)
+                prev_pose = cur_pose
+                #cur_tra = [str(round(self.tracking_history.timestamps[i], 4))] + list(map(str, np.round(cur_pose.Ow, decimals=4))) + \
+                #          list(map(str, np.round(R.from_matrix(cur_pose.Rcw).as_quat(), decimals=4)))
+                #trajectory.append(cur_tra)
+        return trajectory
 
     # estimate a pose from a fitted essential mat; 
     # since we do not have an interframe translation scale, this fitting can be used to detect outliers, estimate interframe orientation and translation direction 
