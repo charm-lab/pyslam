@@ -224,6 +224,14 @@ class Tracking(object):
                 #cur_tra = [str(round(self.tracking_history.timestamps[i], 4))] + list(map(str, np.round(cur_pose.Ow, decimals=4))) + \
                 #          list(map(str, np.round(R.from_matrix(cur_pose.Rcw).as_quat(), decimals=4)))
                 #trajectory.append(cur_tra)
+        points = trajectory
+        import matplotlib.pyplot as plt
+        ax = plt.axes(projection='3d')
+        x = points[:, 0]
+        y = points[:, 1]
+        z = points[:, 2]
+        ax.plot3D(x, y, z)
+        plt.show()
         return trajectory
 
     # estimate a pose from a fitted essential mat; 
